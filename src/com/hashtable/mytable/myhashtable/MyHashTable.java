@@ -1,28 +1,56 @@
 package com.hashtable.mytable.myhashtable;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class MyHashTable {
 
     Node[] array;
-    int size;
-    static int COUNT_APACITY = 2;
+    int size = 0;
+    static int CAPACITY = 16;
 
     public MyHashTable() {
-        array = new Node[COUNT_APACITY];
+        array = new Node[CAPACITY];
     }
 
-    public void put(Object key, Object element){
+    public MyHashTable(int newCapacity) {
+        if (newCapacity > 0) CAPACITY = newCapacity;
+        array = new Node[CAPACITY];
+    }
+
+    public void put(String key, Object element){
         if (size > 0 && size == array.length) {
-            Node[] newArray = new Node[size * 2];
-            System.arraycopy(array, 0, newArray, 0, array.length);
-            array = newArray;
+            resizeArray();
         }
-            array[size] = new Node(key, element);
-            size++;
+        int hash = hash(key);
+
+        int n = CAPACITY;
+        int index = (n - 1) & hash;
+            if (array[index] == null) {
+                array[index] = new Node(hash, key, element);
+                size++;
+            }
+            else if (hash == array[index].hash || key.equals(array[index].key)){
+                array[index].next = new Node(hash, key, element);
+            }
+
     }
 
-    public Object get(Object key){
+    private void resizeArray(){
+        CAPACITY = size * 2;
+        Node[] newArray = new Node[CAPACITY];
+        System.arraycopy(array, 0, newArray, 0, array.length);
+        array = newArray;
+    }
+
+    public static int hash(String key){
+        int h = 0;
+        if (key == null) return 0;
+         h = key.hashCode() ^ (h >>> 16);
+        return h;
+    }
+
+    public Object get(String key){
         try {
             for (Node ar : array){
                 if (ar.getKey() == key) {
@@ -38,7 +66,7 @@ public class MyHashTable {
         return size;
     }
 
-    public boolean remove(Object key){
+    public boolean remove(String key){
          //nomElement = -1;
         int nomElement = findElement(key);
         if (nomElement >= 0){
@@ -54,7 +82,7 @@ public class MyHashTable {
         return false;
     }
 
-    private int findElement(Object key){
+    private int findElement(String key){
         int nom = 0;
         for (Node ar : array){
             if (ar.getKey() == key) {
@@ -65,22 +93,69 @@ public class MyHashTable {
         return -1;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MyHashTable hashTable = (MyHashTable) o;
+        return size == hashTable.size &&
+                Arrays.equals(array, hashTable.array);
+    }
 
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(size);
+        result = 31 * result + Arrays.hashCode(array);
+        return result;
+    }
 
-    private class Node{
-        private Object key;
-        private Object element;
+   /* private class Key{
+        String key;
 
-        public Node(Object key, Object element) {
+        public Key(String key) {
             this.key = key;
-            this.element = element;
         }
 
-        public Object getKey() {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Key key1 = (Key) o;
+            return Objects.equals(key, key1.key);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(key);
+        }
+    }*/
+
+    private class Node {
+        private int hash;
+        private String key;
+        private Object element;
+        private Node next;
+
+        public Node(int hash, String key, Object element) {
+            this.hash = hash;
+            this.key = key;
+            this.element = element;
+            this.next = null;
+        }
+
+        public int getHash() {
+            return hash;
+        }
+
+        public void setHash(int hash) {
+            this.hash = hash;
+        }
+
+        public String getKey() {
             return key;
         }
 
-        public void setKey(Object key) {
+        public void setKey(String key) {
             this.key = key;
         }
 
@@ -92,23 +167,12 @@ public class MyHashTable {
             this.element = element;
         }
 
-        @Override
-        public String toString() {
-            return "ключ = " + key +
-                    ", значение = " + element;
+        public Node getNext() {
+            return next;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Node node = (Node) o;
-            return Objects.equals(key, node.key);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(key);
+        public void setNext(Node next) {
+            this.next = next;
         }
     }
 }
